@@ -64,11 +64,24 @@ def init_db():
         FOREIGN KEY(menu_item_id) REFERENCES menu_items(id)
     );
     """)
-    admin = db.execute("SELECT id FROM users WHERE email=?", ("admin@ADYPU Canteen.local",)).fetchone()
+    
+    admin_email = "admin@adypucanteen.local"
+    admin = db.execute(
+        "SELECT id FROM users WHERE email=?",
+        (admin_email,)
+    ).fetchone()
+
     if not admin:
-        db.execute("INSERT INTO users(name,email,password_hash,role) VALUES(?,?,?,?)",
-                   ("ADYPU Canteen Admin", "admin@ADYPU Canteen.local",
-                    generate_password_hash("Admin@123"), "admin"))
+        db.execute(
+            "INSERT INTO users(name,email,password_hash,role) VALUES(?,?,?,?)",
+            (
+                "ADYPU Canteen Admin",
+                admin_email,
+                generate_password_hash("Admin@123"),
+                "admin"
+            )
+        )
+
     count = db.execute("SELECT COUNT(*) AS n FROM menu_items").fetchone()["n"]
     if count == 0:
         demo = [
