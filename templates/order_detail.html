@@ -1,0 +1,7 @@
+{% extends "base.html" %}{% block title %}Order #{{order.id}} · ADYPU Canteen{% endblock %}{% block content %}
+<div class="page-intro"><span class="eyebrow">ORDER CONFIRMATION</span><h1>Order <span>#CB{{'%04d'|format(order.id)}}</span></h1><p>Thanks for ordering with ADYPU Canteen!</p></div>
+<div class="content-card"><div class="d-flex justify-content-between flex-wrap"><div><span class="muted small">CURRENT STATUS</span><h3 id="orderStatus">{{order.status}}</h3></div><div class="text-end"><span class="muted small">TOTAL</span><h3>₹{{'%.2f'|format(order.total)}}</h3></div></div>
+<div class="progress-track">{% for s in ['Placed','Preparing','Ready','Completed'] %}<div class="progress-step {{'active' if ['Placed','Preparing','Ready','Completed'].index(s) <= ['Placed','Preparing','Ready','Completed'].index(order.status) if order.status in ['Placed','Preparing','Ready','Completed'] else ''}}"><i></i><span>{{s}}</span></div>{% endfor %}</div>
+{% for line in lines %}<div class="d-flex justify-content-between py-2 border-bottom"><span>{{line.item_name}} × {{line.quantity}}</span><b>₹{{'%.2f'|format(line.unit_price*line.quantity)}}</b></div>{% endfor %}
+<div class="mt-3 text-success">✦ You earned {{order.points_earned}} reward points on this order.</div></div>
+{% endblock %}{% block scripts %}<script>watchOrder({{order.id}});</script>{% endblock %}

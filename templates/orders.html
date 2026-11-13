@@ -1,0 +1,3 @@
+{% extends "base.html" %}{% block title %}My orders · ADYPU Canteen{% endblock %}{% block content %}
+<div class="page-intro"><span class="eyebrow">YOUR FOOD JOURNEY</span><h1>Order <span>history.</span></h1></div>
+{% for o in orders %}<a class="order-row" href="{{url_for('order_detail',order_id=o.id)}}"><div><b>Order #CB{{'%04d'|format(o.id)}}</b><p class="muted mb-0 small">{{o.created_at}}</p></div><span class="status status-{{o.status|lower}}">{{o.status}}</span><strong>₹{{'%.2f'|format(o.total)}}</strong></a>{% else %}<div class="empty-state">No orders yet. Your first campus feast is waiting! <a href="{{url_for('menu')}}">Explore menu</a></div>{% endfor %}{% endblock %}

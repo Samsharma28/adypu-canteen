@@ -1,0 +1,7 @@
+{% extends "base.html" %}{% block title %}{{mode|title}} · ADYPU Canteen{% endblock %}{% block content %}
+<div class="auth-wrap"><div class="auth-panel"><span class="eyebrow">WELCOME TO THE FOOD CLUB</span><h2>{{'Create your account' if mode=='register' else 'Good to see you again.'}}</h2><p class="muted">Your campus cravings are in good hands.</p><form method="post">
+{% if mode=='register' %}<label class="form-label">Full name</label><input class="form-control mb-3" name="name" required>{% endif %}
+<label class="form-label">College email</label><input class="form-control mb-3" type="email" name="email" required>
+<label class="form-label">Password</label><input class="form-control mb-4" type="password" name="password" minlength="8" required>
+<button class="btn btn-primary btn-lg rounded-pill w-100">{{'Create account' if mode=='register' else 'Sign in'}}</button></form>
+<p class="mt-4 mb-0 muted">{% if mode=='register' %}Already a member? <a href="{{url_for('login')}}">Sign in</a>{% else %}New to ADYPU Canteen? <a href="{{url_for('register')}}">Create an account</a>{% endif %}</p></div></div>{% endblock %}
