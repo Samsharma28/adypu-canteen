@@ -83,32 +83,34 @@ def register():
                 flash("That email is already registered.", "danger")
     return render_template("auth.html", mode="register")
 
+
 @app.route("/login", methods=["GET","POST"])
 def login():
-    if request.method=="POST":
-        user=get_db().execute("SELECT * FROM users WHERE email=?",(request.form.get("email","").strip().lower(),)).fetchone()
-        if user and check_password_hash(user["password_hash"],request.form.get("password","")):
-           session.clear()
-           session.update(user_id=user["id"], role=user["role"], name=user["name"])
+    if request.method == "POST":
+        user = get_db().execute(
+            "SELECT * FROM users WHERE email=?",
+            (request.form.get("email", "").strip().lower(),)
+        ).fetchone()
 
-if user["role"] == "student":
-    send_notification_email(
-        user["email"],
-        "Welcome to ADYPU Canteen!",
-        f"Hello {user['name']},\n\n"
-        "You have successfully logged in to ADYPU Canteen.\n"
-        "Enjoy ordering your favourite food!"
-    )
+        if user and check_password_hash(user["password_hash"], request.form.get("password", "")):
+            session.clear()
+            session.update(user_id=user["id"], role=user["role"], name=user["name"])
 
-return redirect(url_for("admin_dashboard" if user["role"]=="admin" else "menu"))
+            if user["role"] == "student":
+                send_notification_email(
+                    user["email"],
+                    "Welcome to ADYPU Canteen!",
+                    f"Hello {user['name']},\n\n"
+                    "You have successfully logged in to ADYPU Canteen.\n"
+                    "Enjoy ordering your favourite food!"
+                )
+
+            return redirect(url_for("admin_dashboard" if user["role"] == "admin" else "menu"))
+
         flash("Incorrect email or password.", "danger")
+
     return render_template("auth.html", mode="login")
 
-@app.route("/logout")
-def logout():
-    session.clear()
-    flash("You have been signed out.", "info")
-    return redirect(url_for("index"))
 
 @app.route("/menu")
 def menu():
