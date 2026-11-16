@@ -12,29 +12,8 @@ app = Flask(__name__)
 app.config.from_object(Config)
 app.teardown_appcontext(close_db)
 def send_notification_email(to_email, subject, message):
-    try:
-        email = EmailMessage()
-        email["Subject"] = subject
-        email["From"] = os.environ.get("MAIL_USERNAME")
-        email["To"] = to_email
-        email.set_content(message)
-
-        with smtplib.SMTP(
-            os.environ.get("MAIL_SERVER", "smtp.gmail.com"),
-            int(os.environ.get("MAIL_PORT", 587))
-        ) as server:
-            server.starttls()
-            server.login(
-                os.environ.get("MAIL_USERNAME"),
-                os.environ.get("MAIL_PASSWORD")
-            )
-            server.send_message(email)
-
-        print("Notification email sent successfully.")
-
-    except Exception as e:
-        print("Email notification failed:", e)
-
+    print("Email notifications are disabled on this deployment.")
+    return
 with app.app_context():
     init_db()
 
