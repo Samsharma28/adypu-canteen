@@ -1,6 +1,6 @@
-import io, os, sqlite3
-import smtplib
-from email.message import EmailMessage
+import io, os, sqlite3, json
+import urllib.request
+import urllib.error
 from functools import wraps
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify, send_file, abort
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -11,9 +11,41 @@ from database import get_db, close_db, init_db
 app = Flask(__name__)
 app.config.from_object(Config)
 app.teardown_appcontext(close_db)
+
 def send_notification_email(to_email, subject, message):
-    print("Email notifications are disabled on this deployment.")
-    return
+    api_key = os.environ.get("BREVO_API_KEY")
+
+    if not api_key:
+        print("BREVO_API_KEY is missing.")
+        return
+
+    payload = {
+        "sender": {
+            "name": "ADYPU Canteen",
+            "email": "adypucanteen@gmail.com"
+        },
+        "to": [{"email": to_email}],
+        "subject": subject,
+        "textContent": message
+    }
+
+    req = urllib.request.Request(
+        "https://api.brevo.com/v3/smtp/email",
+        data=json.dumps(payload).encode("utf-8"),
+        headers={
+            "accept": "application/json",
+            "api-key": api_key,
+            "content-type": "application/json"
+        },
+        method="POST"
+    )
+
+    try:
+        with urllib.request.urlopen(req, timeout=15) as response:
+            print("Brevo email sent:", response.status)
+    except Exception as e:
+        print("Brevo email failed:", e)
+
 with app.app_context():
     init_db()
 
