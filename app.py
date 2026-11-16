@@ -1,4 +1,6 @@
 import io, os, sqlite3
+import smtplib
+from email.message import EmailMessage
 from functools import wraps
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify, send_file, abort
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -9,6 +11,29 @@ from database import get_db, close_db, init_db
 app = Flask(__name__)
 app.config.from_object(Config)
 app.teardown_appcontext(close_db)
+def send_notification_email(to_email, subject, message):
+    try:
+        email = EmailMessage()
+        email["Subject"] = subject
+        email["From"] = os.environ.get("MAIL_USERNAME")
+        email["To"] = to_email
+        email.set_content(message)
+
+        with smtplib.SMTP(
+            os.environ.get("MAIL_SERVER", "smtp.gmail.com"),
+            int(os.environ.get("MAIL_PORT", 587))
+        ) as server:
+            server.starttls()
+            server.login(
+                os.environ.get("MAIL_USERNAME"),
+                os.environ.get("MAIL_PASSWORD")
+            )
+            server.send_message(email)
+
+        print("Notification email sent successfully.")
+
+    except Exception as e:
+        print("Email notification failed:", e)
 
 with app.app_context():
     init_db()
@@ -63,9 +88,19 @@ def login():
     if request.method=="POST":
         user=get_db().execute("SELECT * FROM users WHERE email=?",(request.form.get("email","").strip().lower(),)).fetchone()
         if user and check_password_hash(user["password_hash"],request.form.get("password","")):
-            session.clear()
-            session.update(user_id=user["id"], role=user["role"], name=user["name"])
-            return redirect(url_for("admin_dashboard" if user["role"]=="admin" else "menu"))
+           session.clear()
+           session.update(user_id=user["id"], role=user["role"], name=user["name"])
+
+if user["role"] == "student":
+    send_notification_email(
+        user["email"],
+        "Welcome to ADYPU Canteen!",
+        f"Hello {user['name']},\n\n"
+        "You have successfully logged in to ADYPU Canteen.\n"
+        "Enjoy ordering your favourite food!"
+    )
+
+return redirect(url_for("admin_dashboard" if user["role"]=="admin" else "menu"))
         flash("Incorrect email or password.", "danger")
     return render_template("auth.html", mode="login")
 
@@ -116,8 +151,23 @@ def checkout():
         db.execute("UPDATE menu_items SET stock=stock-? WHERE id=?",(qty,item["id"]))
     db.execute("UPDATE users SET points=points+? WHERE id=?",(points,session["user_id"]))
     db.commit()
-    return redirect(url_for("order_detail",order_id=order_id))
+db.commit()
 
+user = db.execute(
+    "SELECT name, email FROM users WHERE id=?",
+    (session["user_id"],)
+).fetchone()
+
+send_notification_email(
+    user["email"],
+    f"Order #{order_id} placed successfully!",
+    f"Hello {user['name']},\n\n"
+    f"Your order #{order_id} has been placed successfully.\n"
+    f"Total amount: Rs. {total:.2f}\n"
+    "Thank you for ordering from ADYPU Canteen!"
+)
+
+return redirect(url_for("order_detail",order_id=order_id))
 @app.route("/orders")
 @login_required
 def orders():
