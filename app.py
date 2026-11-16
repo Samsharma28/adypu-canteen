@@ -165,23 +165,23 @@ def checkout():
         db.execute("UPDATE menu_items SET stock=stock-? WHERE id=?",(qty,item["id"]))
     db.execute("UPDATE users SET points=points+? WHERE id=?",(points,session["user_id"]))
     db.commit()
-db.commit()
+    db.commit()
 
-user = db.execute(
-    "SELECT name, email FROM users WHERE id=?",
-    (session["user_id"],)
-).fetchone()
+    user = db.execute(
+         "SELECT name, email FROM users WHERE id=?",
+         (session["user_id"],)
+    ).fetchone()
 
-send_notification_email(
-    user["email"],
-    f"Order #{order_id} placed successfully!",
-    f"Hello {user['name']},\n\n"
-    f"Your order #{order_id} has been placed successfully.\n"
-    f"Total amount: Rs. {total:.2f}\n"
-    "Thank you for ordering from ADYPU Canteen!"
+    send_notification_email(
+         user["email"],
+         f"Order #{order_id} placed successfully!",
+         f"Hello {user['name']},\n\n"
+         f"Your order #{order_id} has been placed successfully.\n"
+         f"Total amount: Rs. {total:.2f}\n"
+         "Thank you for ordering from ADYPU Canteen!"
 )
 
-return redirect(url_for("order_detail",order_id=order_id))
+    return redirect(url_for("order_detail",order_id=order_id))
 @app.route("/orders")
 @login_required
 def orders():
