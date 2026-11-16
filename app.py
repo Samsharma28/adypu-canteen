@@ -84,7 +84,7 @@ def register():
     return render_template("auth.html", mode="register")
 
 
-@app.route("/login", methods=["GET","POST"])
+@app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
         user = get_db().execute(
@@ -92,25 +92,37 @@ def login():
             (request.form.get("email", "").strip().lower(),)
         ).fetchone()
 
-        if user and check_password_hash(user["password_hash"], request.form.get("password", "")):
+        if user and check_password_hash(
+            user["password_hash"], request.form.get("password", "")
+        ):
             session.clear()
-            session.update(user_id=user["id"], role=user["role"], name=user["name"])
+            session.update(
+                user_id=user["id"],
+                role=user["role"],
+                name=user["name"]
+            )
 
             if user["role"] == "student":
-                send_notification_email(
-                    user["email"],
-                    "Welcome to ADYPU Canteen!",
-                    f"Hello {user['name']},\n\n"
-                    "You have successfully logged in to ADYPU Canteen.\n"
-                    "Enjoy ordering your favourite food!"
-                )
+                try:
+                    send_notification_email(
+                        user["email"],
+                        "Welcome to ADYPU Canteen!",
+                        f"Hello {user['name']},\n\n"
+                        "You have successfully logged in to ADYPU Canteen.\n"
+                        "Enjoy ordering your favourite food!"
+                    )
+                except Exception as e:
+                    print("Login email notification failed:", e)
 
-            return redirect(url_for("admin_dashboard" if user["role"] == "admin" else "menu"))
+            return redirect(
+                url_for("admin_dashboard")
+                if user["role"] == "admin"
+                else url_for("menu")
+            )
 
         flash("Incorrect email or password.", "danger")
 
     return render_template("auth.html", mode="login")
-
 
 @app.route("/menu")
 def menu():
